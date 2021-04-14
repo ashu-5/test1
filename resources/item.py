@@ -1,0 +1,91 @@
+from flask_jwt import jwt_required
+from flask_restful import Resource, reqparse
+from models.item import ItemModel
+
+class ItemList(Resource):
+
+    def get(self):
+        # Can do it in either of the two ways below, use list comprehension or lanbda.
+        return {'items': [item.json() for item in ItemModel.query.all()]}
+        #return {'items': list(map(lambda x: x.json(), ItemModel.query.all()))}
+
+
+class Item(Resource):
+
+    parser = reqparse.RequestParser()
+
+    parser.add_argument(
+        'price',
+        type=float,
+        required=True,
+        help="Price cannot be left blank."
+    )
+
+    parser.add_argument(
+        'store_id',
+        type=int,
+        required=True,
+        help="Every Item needs a Store Id."
+    )
+
+    # () is required after @jwt_required 
+    @jwt_required()
+    def get(self, name):
+
+        item = ItemModel.find_by_name(name)
+
+        # This needs to return a dict, as of now item is an ItemModel object. So we can call the json() method there.
+
+        if item:
+            return item.json()
+        
+        return {"message":"Item not found"}, 404
+
+    def post(self, name):
+
+        if ItemModel.find_by_name(name):
+            return {"message":"Item with name {} already exists. ".format(name)}, 400
+
+        data = Item.parser.parse_args()
+
+        # This needs to change to an ItemModel object for insert. item = {'name':name, 'price': data['price']}
+
+        #item = ItemModel(name, data['price'], data['store_id'])
+        item = ItemModel(name, **data)
+
+        try:
+            # We don't need to call the ItemModel class now. We can just ask item to insert itself. ItemModel.insert(item)
+            item.save_to_db()
+        except:
+            return {"message":"An error occured during item append"}, 500
+
+        return item.json(), 201
+
+    def put(self, name):
+        
+        data = Item.parser.parse_args()
+        
+        item = ItemModel.find_by_name(name)
+
+        if item is None:
+            #item = ItemModel(name, data['price'],data['store_id'])
+            # Above is same as this since data will only have these two parameters
+            item = ItemModel(name, **data)
+            
+        else:
+            item.price = data['price']
+            item.store_id = data['store_id']
+
+        item.save_to_db()
+        
+        return item.json()
+
+    def delete(self, name):
+
+        item = ItemModel.find_by_name(name)
+
+        if item:
+            item.delete_from_db()
+            return {"message":"Item deleted"},201
+        
+        return {"message":"Item does not exist"},400
