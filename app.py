@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
@@ -16,8 +17,12 @@ api = Api(app)
 
 jwt = JWT(app,authenticate,identity)
 
+# This will be replaced by postgres url for heroku deployment using postgres database.
 # SQLALCHEMY db is going to live at the root folder of our project. Doesn't have to be sqlite - it can be postgresql, mysql, etc.
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db"
+#app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db"
+
+# If the first isn't found, use the second database.
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',"sqlite:///data.db")
 
 # Turns off flask_SQLAlchemy modification tracker to save resource. We'll use SQLAlchemy's built in one to do that.
 app.config['SQLALCHEMY_TRACK_NOTIFICATIONS'] = False
