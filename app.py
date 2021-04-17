@@ -26,10 +26,6 @@ app.config['SQLALCHEMY_TRACK_NOTIFICATIONS'] = False
 # config JWT to expire within half an hour
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=1800)
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
 api.add_resource(Item,'/item/<string:name>')
 api.add_resource(ItemList,'/items')
 api.add_resource(Store,'/store/<string:name>')
