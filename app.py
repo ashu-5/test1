@@ -9,20 +9,22 @@ from resources.item import Item, ItemList
 from resources.store import Store, StoreList
 from datetime import timedelta
 
-#from db import db
-
 app = Flask(__name__)
 app.secret_key='Nadal'
 api = Api(app)
 
 jwt = JWT(app,authenticate,identity)
 
+#from db import db
+from db import db
+db.init_app(app)
+
 # This will be replaced by postgres url for heroku deployment using postgres database.
 # SQLALCHEMY db is going to live at the root folder of our project. Doesn't have to be sqlite - it can be postgresql, mysql, etc.
 #app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///data.db"
 
 # If the first isn't found, use the second database.
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',"sqlite:///data.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL','sqlite:///data.db')
 
 # Turns off flask_SQLAlchemy modification tracker to save resource. We'll use SQLAlchemy's built in one to do that.
 app.config['SQLALCHEMY_TRACK_NOTIFICATIONS'] = False
@@ -37,7 +39,4 @@ api.add_resource(StoreList,'/stores')
 api.add_resource(UserRegister,'/register')
 
 if __name__ == "__main__":
-    from db import db
-    db.init_app(app)
-
     app.run(port=5010, debug=True)
